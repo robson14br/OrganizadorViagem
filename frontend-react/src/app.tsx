@@ -12,11 +12,11 @@ const router = createBrowserRouter([
     element: <CreateTripPage />,
   },
   {
-    path: "/trips/:tripsId",
-    element: <TripDetailsPage/>,
+    path: "/trips/:tripId", // Corrigido para /trips/:tripId
+    element: <TripDetailsPage />,
   },
 ]);
 
 export function App() {
- return <RouterProvider router={router} />
+  return <RouterProvider router={router} />;
 }

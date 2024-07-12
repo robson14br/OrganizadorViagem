@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { dayjs } from '../lib/dayjs'
 import { ClientError } from '../errors/client-error'
 
 export async function getParticipants(app: FastifyInstance) {
@@ -18,6 +17,7 @@ export async function getParticipants(app: FastifyInstance) {
     async (request) => {
       const { tripId } = request.params
 
+      // Busca a viagem com os participantes selecionados
       const trip = await prisma.trip.findUnique({
         where: { id: tripId },
         include: { 
@@ -32,10 +32,12 @@ export async function getParticipants(app: FastifyInstance) {
         },
       })
 
+      // Verifica se a viagem existe
       if (!trip) {
         throw new ClientError('Trip not found')
       }
 
+      // Retorna os participantes encontrados na viagem
       return { participants: trip.participants }
     },
   )

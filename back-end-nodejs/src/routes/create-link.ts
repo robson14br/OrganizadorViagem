@@ -22,14 +22,17 @@ export async function createLink(app: FastifyInstance) {
       const { tripId } = request.params
       const { title, url } = request.body
 
+      // Verifica se a viagem existe
       const trip = await prisma.trip.findUnique({
         where: { id: tripId }
       })
 
+      // Se a viagem não existe, lança um erro
       if (!trip) {
         throw new ClientError('Trip not found')
       }
 
+      // Cria o link associado à viagem encontrada
       const link = await prisma.link.create({
         data: {
           title,
@@ -38,6 +41,7 @@ export async function createLink(app: FastifyInstance) {
         }
       })
 
+      // Retorna o ID do link criado
       return { linkId: link.id }
     },
   )

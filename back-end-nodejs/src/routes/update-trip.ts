@@ -24,6 +24,7 @@ export async function updateTrip(app: FastifyInstance) {
       const { tripId } = request.params
       const { destination, starts_at, ends_at } = request.body
 
+      // Verifica se a viagem existe
       const trip = await prisma.trip.findUnique({
         where: { id: tripId }
       })
@@ -32,6 +33,7 @@ export async function updateTrip(app: FastifyInstance) {
         throw new ClientError('Trip not found')
       }
 
+      // Validação das datas
       if (dayjs(starts_at).isBefore(new Date())) {
         throw new ClientError('Invalid trip start date.')
       }
@@ -40,6 +42,7 @@ export async function updateTrip(app: FastifyInstance) {
         throw new ClientError('Invalid trip end date.')
       }
 
+      // Atualiza os dados da viagem no banco de dados
       await prisma.trip.update({
         where: { id: tripId },
         data: {
@@ -49,6 +52,7 @@ export async function updateTrip(app: FastifyInstance) {
         },
       })
 
+      // Retorna o ID da viagem atualizada
       return { tripId: trip.id }
     },
   )

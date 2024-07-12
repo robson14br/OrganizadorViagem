@@ -17,6 +17,7 @@ export async function getLinks(app: FastifyInstance) {
     async (request) => {
       const { tripId } = request.params
 
+      // Busca a viagem com os links associados
       const trip = await prisma.trip.findUnique({
         where: { id: tripId },
         include: { 
@@ -24,10 +25,12 @@ export async function getLinks(app: FastifyInstance) {
         },
       })
 
+      // Verifica se a viagem existe
       if (!trip) {
         throw new ClientError('Trip not found')
       }
 
+      // Retorna os links associados à viagem encontrada
       return { links: trip.links }
     },
   )

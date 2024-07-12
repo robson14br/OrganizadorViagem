@@ -1,12 +1,12 @@
-import type { FastifyInstance } from 'fastify'
-import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import { z } from 'zod'
-import nodemailer from 'nodemailer'
-import { prisma } from '../lib/prisma'
-import { dayjs } from '../lib/dayjs'
-import { getMailClient } from '../lib/mail'
-import { ClientError } from '../errors/client-error'
-import { env } from '../env'
+import type { FastifyInstance } from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
+import nodemailer from 'nodemailer';
+import { prisma } from '../lib/prisma';
+import dayjs from 'dayjs'; // Corrigido o import para 'dayjs'
+import { getMailClient } from '../lib/mail';
+import { ClientError } from '../errors/client-error';
+import { env } from '../env';
 
 export async function createInvite(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post(
@@ -21,57 +21,65 @@ export async function createInvite(app: FastifyInstance) {
         }),
       },
     },
-    async (request) => {
-      const { tripId } = request.params
-      const { email } = request.body
+    async (request, reply) => {
+      const { tripId } = request.params;
+      const { email } = request.body;
 
-      const trip = await prisma.trip.findUnique({
-        where: { id: tripId }
-      })
+      try {
+        const trip = await prisma.trip.findUnique({
+          where: { id: tripId },
+        });
 
-      if (!trip) {
-        throw new ClientError('Trip not found')
-      }
-
-      const participant = await prisma.participant.create({
-        data: {
-          email,
-          trip_id: tripId,
+        if (!trip) {
+          app.log.error(`Trip with ID ${tripId} not found`);
+          throw new ClientError('Trip not found');
         }
-      })
 
-      const formattedStartDate = dayjs(trip.starts_at).format('LL')
-      const formattedEndDate = dayjs(trip.ends_at).format('LL')
+        const participant = await prisma.participant.create({
+          data: {
+            email,
+            trip_id: tripId,
+          },
+        });
 
-      const mail = await getMailClient()
+        const formattedStartDate = dayjs(trip.starts_at).format('LL');
+        const formattedEndDate = dayjs(trip.ends_at).format('LL');
 
-      const confirmationLink = `${env.API_BASE_URL}/participants/${participant.id}/confirm`
+        const mail = await getMailClient();
 
-      const message = await mail.sendMail({
-        from: {
-          name: 'Equipe plann.er',
-          address: 'oi@plann.er',
-        },
-        to: participant.email,
-        subject: `Confirme sua presença na viagem para ${trip.destination} em ${formattedStartDate}`,
-        html: `
-        <div style="font-family: sans-serif; font-size: 16px; line-height: 1.6;">
-          <p>Você foi convidado(a) para participar de uma viagem para <strong>${trip.destination}</strong> nas datas de <strong>${formattedStartDate}</strong> até <strong>${formattedEndDate}</strong>.</p>
-          <p></p>
-          <p>Para confirmar sua presença na viagem, clique no link abaixo:</p>
-          <p></p>
-          <p>
-            <a href="${confirmationLink}">Confirmar viagem</a>
-          </p>
-          <p></p>
-          <p>Caso você não saiba do que se trata esse e-mail, apenas ignore esse e-mail.</p>
-        </div>
-      `.trim(),
-      })
+        const confirmationLink = `${env.API_BASE_URL}/participants/${participant.id}/confirm`;
 
-      console.log(nodemailer.getTestMessageUrl(message))
+        const message = await mail.sendMail({
+          from: {
+            name: 'Equipe plann.er',
+            address: 'oi@plann.er',
+          },
+          to: participant.email,
+          subject: `Confirme sua presença na viagem para ${trip.destination} em ${formattedStartDate}`,
+          html: `
+          <div style="font-family: sans-serif; font-size: 16px; line-height: 1.6;">
+            <p>Você foi convidado(a) para participar de uma viagem para <strong>${trip.destination}</strong> nas datas de <strong>${formattedStartDate}</strong> até <strong>${formattedEndDate}</strong>.</p>
+            <p></p>
+            <p>Para confirmar sua presença na viagem, clique no link abaixo:</p>
+            <p></p>
+            <p>
+              <a href="${confirmationLink}">Confirmar viagem</a>
+            </p>
+            <p></p>
+            <p>Caso você não saiba do que se trata esse e-mail, apenas ignore esse e-mail.</p>
+          </div>
+        `.trim(),
+        });
 
-      return { participantId: participant.id }
+        console.log(nodemailer.getTestMessageUrl(message));
+
+        app.log.info(`Invite created and email sent to ${email}`);
+        return { participantId: participant.id };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        app.log.error(`Error creating invite for trip ID ${tripId}: ${errorMessage}`);
+        reply.status(500).send({ error: errorMessage });
+      }
     },
-  )
+  );
 }

@@ -17,6 +17,7 @@ export async function getTripDetails(app: FastifyInstance) {
     async (request) => {
       const { tripId } = request.params
 
+      // Busca a viagem no banco de dados
       const trip = await prisma.trip.findUnique({
         select: {
           id: true,
@@ -28,10 +29,12 @@ export async function getTripDetails(app: FastifyInstance) {
         where: { id: tripId },
       })
 
+      // Se a viagem não existe, lança um erro
       if (!trip) {
         throw new ClientError('Trip not found')
       }
 
+      // Retorna os detalhes da viagem
       return { trip }
     },
   )

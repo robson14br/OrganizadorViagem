@@ -18,6 +18,7 @@ export async function getActivities(app: FastifyInstance) {
     async (request) => {
       const { tripId } = request.params
 
+      // Verifica se a viagem existe
       const trip = await prisma.trip.findUnique({
         where: { id: tripId },
         include: { 
@@ -33,8 +34,10 @@ export async function getActivities(app: FastifyInstance) {
         throw new ClientError('Trip not found')
       }
 
+      // Calcula a diferença em dias entre a data de início e término da viagem
       const differenceInDaysBetweenTripStartAndEnd = dayjs(trip.ends_at).diff(trip.starts_at, 'days')
 
+      // Mapeia as atividades por dia
       const activities = Array.from({ length: differenceInDaysBetweenTripStartAndEnd + 1 }).map((_, index) => {
         const date = dayjs(trip.starts_at).add(index, 'days')
 

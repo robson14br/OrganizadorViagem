@@ -2,7 +2,7 @@ import { MapPin, Calendar, Settings2, ArrowRight, X } from "lucide-react";
 import { Button } from "../../../components/button";
 import { useState } from "react";
 import { DateRange, DayPicker } from "react-day-picker";
-import 'react-day-picker/dist/style.css'
+import 'react-day-picker/dist/style.css';
 import { format } from "date-fns";
 
 interface DestinationAndDateStepProps {
@@ -22,7 +22,7 @@ export function DestinationAndDateStep({
   setEventStartAndEndDates,
   eventStartAndEndDates
 }: DestinationAndDateStepProps) {
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   function openDatePicker() {
     setIsDatePickerOpen(true);
@@ -32,9 +32,9 @@ export function DestinationAndDateStep({
     setIsDatePickerOpen(false);
   }
 
-  const displayedDate = eventStartAndEndDates && eventStartAndEndDates.from && eventStartAndEndDates.to 
-  ? format(eventStartAndEndDates.from, "d' de 'LLL").concat(' até ').concat(format(eventStartAndEndDates.to, "d' de 'LLL"))
-  : null
+  const displayedDate = eventStartAndEndDates && eventStartAndEndDates.from && eventStartAndEndDates.to
+    ? format(eventStartAndEndDates.from, "d 'de' LLL").concat(' até ').concat(format(eventStartAndEndDates.to, "d 'de' LLL"))
+    : 'Quando';
 
   return (
     <div className="h-16 bg-zinc-900 px-4 rounded-xl flex items-center shadow-shape gap-3">
@@ -45,16 +45,14 @@ export function DestinationAndDateStep({
           type="text"
           placeholder="Para onde você vai?"
           className="bg-transparent text-lg placeholder-zinc-400 outline-none flex-1"
-          onChange={event => setDestination(event.target.value)}
+          onChange={(event) => setDestination(event.target.value)}
         />
       </div>
 
       <button disabled={isGuestsInputOpen} onClick={openDatePicker} className="flex items-center gap-2 text-left w-[240px]">
         <Calendar className="size-5 text-zinc-400" />
-        <span
-          className="text-lg text-zinc-400 w-40 flex-1"
-        >
-          {displayedDate || 'Quando'}
+        <span className="text-lg text-zinc-400 w-40 flex-1">
+          {displayedDate}
         </span>
       </button>
 
@@ -69,7 +67,7 @@ export function DestinationAndDateStep({
                 </button>
               </div>
             </div>
-            
+
             <DayPicker mode="range" selected={eventStartAndEndDates} onSelect={setEventStartAndEndDates} />
           </div>
         </div>
@@ -89,5 +87,5 @@ export function DestinationAndDateStep({
         </Button>
       )}
     </div>
-  )
+  );
 }

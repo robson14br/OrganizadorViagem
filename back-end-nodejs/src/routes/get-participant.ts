@@ -17,6 +17,7 @@ export async function getParticipant(app: FastifyInstance) {
     async (request) => {
       const { participantId } = request.params
 
+      // Busca o participante com os dados selecionados
       const participant = await prisma.participant.findUnique({
         select: {
           id: true,
@@ -27,10 +28,12 @@ export async function getParticipant(app: FastifyInstance) {
         where: { id: participantId },
       })
 
+      // Verifica se o participante existe
       if (!participant) {
         throw new ClientError('Participant not found')
       }
 
+      // Retorna os detalhes do participante encontrado
       return { participant }
     },
   )

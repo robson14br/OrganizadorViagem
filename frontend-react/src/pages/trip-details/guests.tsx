@@ -12,12 +12,32 @@ interface Participant {
 }
 
 export function Guests() {
-  const { tripId } = useParams()
-  const [participants, setParticipants] = useState<Participant[]>([])
+  const { tripId } = useParams();
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get(`trips/${tripId}/participants`).then(response => setParticipants(response.data.participants))
-  }, [tripId])
+    if (!tripId) {
+      setError("ID da viagem não fornecido");
+      setLoading(false);
+      return;
+    }
+
+    api.get(`trips/${tripId}/participants`)
+      .then(response => {
+        setParticipants(response.data.participants);
+        setLoading(false);
+      })
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .catch(_error => {
+        setError("Erro ao carregar participantes. Tente novamente.");
+        setLoading(false);
+      });
+  }, [tripId]);
+
+  if (loading) return <p>Carregando...</p>;
+  if (error) return <p className="text-red-500 text-sm">{error}</p>;
 
   return (
     <div className="space-y-6">
@@ -47,5 +67,5 @@ export function Guests() {
         Gerenciar convidados
       </Button>
     </div>
-  )
+  );
 }

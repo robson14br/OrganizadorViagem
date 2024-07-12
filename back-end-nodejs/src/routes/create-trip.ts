@@ -33,6 +33,7 @@ export async function createTrip(app: FastifyInstance) {
         emails_to_invite,
       } = request.body
 
+      // Validando datas
       if (dayjs(starts_at).isBefore(new Date())) {
         throw new ClientError('Invalid trip start date.')
       }
@@ -41,6 +42,7 @@ export async function createTrip(app: FastifyInstance) {
         throw new ClientError('Invalid trip end date.')
       }
 
+      // Criando a viagem no banco de dados
       const trip = await prisma.trip.create({
         data: {
           destination,
@@ -64,11 +66,14 @@ export async function createTrip(app: FastifyInstance) {
         },
       })
 
+      // Formatação das datas para exibição no e-mail
       const formattedStartDate = dayjs(starts_at).format('LL')
       const formattedEndDate = dayjs(ends_at).format('LL')
 
+      // Construção do link de confirmação
       const confirmationLink = `${env.API_BASE_URL}/trips/${trip.id}/confirm`
 
+      // Envio de e-mail de confirmação
       const mail = await getMailClient()
 
       const message = await mail.sendMail({
@@ -96,8 +101,10 @@ export async function createTrip(app: FastifyInstance) {
       `.trim(),
       })
 
+      // Log da URL de teste do e-mail enviado (usado para desenvolvimento)
       console.log(nodemailer.getTestMessageUrl(message))
 
+      // Retorno do ID da viagem criada
       return { tripId: trip.id }
     },
   )

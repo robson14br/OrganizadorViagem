@@ -15,12 +15,31 @@ interface Activity {
 }
 
 export function Activities() {
-  const { tripId } = useParams()
-  const [activities, setActivities] = useState<Activity[]>([])
+  const { tripId } = useParams();
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get(`trips/${tripId}/activities`).then(response => setActivities(response.data.activities))
-  }, [tripId])
+    if (!tripId) {
+      setError("ID da viagem não fornecido");
+      setLoading(false);
+      return;
+    }
+
+    api.get(`trips/${tripId}/activities`)
+      .then(response => {
+        setActivities(response.data.activities);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Erro ao carregar atividades");
+        setLoading(false);
+      });
+  }, [tripId]);
+
+  if (loading) return <p>Carregando...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
     <div className="space-y-8">
@@ -28,8 +47,8 @@ export function Activities() {
         return (
           <div key={category.date} className="space-y-2.5">
             <div className="flex gap-2 items-baseline">
-              <span className="text-xl text-zinc-300 font-semibold">Dia {format(category.date, 'd')}</span>
-              <span className="text-xs text-zinc-500">{format(category.date, 'EEEE', { locale: ptBR })}</span>
+              <span className="text-xl text-zinc-300 font-semibold">Dia {format(new Date(category.date), 'd')}</span>
+              <span className="text-xs text-zinc-500">{format(new Date(category.date), 'EEEE', { locale: ptBR })}</span>
             </div>
             {category.activities.length > 0 ? (
               <div>
@@ -40,19 +59,19 @@ export function Activities() {
                         <CircleCheck className="size-5 text-lime-300" />
                         <span className="text-zinc-100">{activity.title}</span>
                         <span className="text-zinc-400 text-sm ml-auto">
-                          {format(activity.occurs_at, 'HH:mm')}h
+                          {format(new Date(activity.occurs_at), 'HH:mm')}h
                         </span>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             ) : (
               <p className="text-zinc-500 text-sm">Nenhuma atividade cadastrada nessa data.</p>
             )}
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
